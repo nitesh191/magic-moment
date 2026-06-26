@@ -183,6 +183,152 @@ function useInView(threshold = 0.15) {
   return { ref, isVisible };
 }
 
+/* ─────────────── FAQS ─────────────── */
+const faqs = [
+  {
+    question: "How do I book a tour?",
+    answer: "You can book directly by clicking the 'Book Now' button on any tour card, which will connect you to our team via WhatsApp for a personalized booking experience.",
+  },
+  {
+    question: "What is the best time to visit Himachal?",
+    answer: "The best time to visit is from March to June for pleasant weather, or September to November for clear skies and autumn colors. Winter (Dec-Feb) is perfect for snow lovers.",
+  },
+  {
+    question: "Are your treks suitable for beginners?",
+    answer: "Yes! We offer a range of treks from Easy to Challenging. We recommend starting with an 'Easy' trek like the Jibhi or Sissu getaways if you are a beginner.",
+  },
+  {
+    question: "What is included in the tour price?",
+    answer: "Our prices typically include accommodation, local transport, guided treks, and breakfast. Detailed inclusions will be shared with you during the booking process.",
+  }
+];
+
+function FaqAccordion() {
+  const [openIndex, setOpenIndex] = useState<number | null>(null);
+
+  return (
+    <section className="faq-section container" id="faq">
+      <div className="section-header" style={{ marginBottom: "24px" }}>
+        <h2>Frequently Asked Questions</h2>
+      </div>
+      <div className="faq-list">
+        {faqs.map((faq, i) => (
+          <div className={`faq-item ${openIndex === i ? 'open' : ''}`} key={i}>
+            <button className="faq-question" onClick={() => setOpenIndex(openIndex === i ? null : i)}>
+              {faq.question}
+              <span className="faq-icon">{openIndex === i ? '−' : '+'}</span>
+            </button>
+            <div className="faq-answer">
+              <div className="faq-answer-inner">
+                {faq.answer}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+
+/* ─────────────── WHY US SECTION ─────────────── */
+function WhyUsSection() {
+  return (
+    <section className="why-us-section container" id="why-us">
+      <div className="section-header why-us-header">
+        <span className="why-us-eyebrow">THE MAGIC MOMENT DIFFERENCE</span>
+        <h2>Why Travel With Us</h2>
+      </div>
+      <div className="why-us-grid">
+        <div className="why-us-card">
+          <div className="why-us-icon">🛡️</div>
+          <h3>SEBI-Insured Travel</h3>
+          <p>Your peace of mind is guaranteed with our fully insured group travel packages.</p>
+        </div>
+        <div className="why-us-card">
+          <div className="why-us-icon">🗺️</div>
+          <h3>Certified Local Guides</h3>
+          <p>Explore hidden trails safely with our expert, certified local mountain guides.</p>
+        </div>
+        <div className="why-us-card">
+          <div className="why-us-icon">👥</div>
+          <h3>Small Batch Sizes</h3>
+          <p>We cap our groups at 12 people to ensure a personal, uncrowded experience.</p>
+        </div>
+        <div className="why-us-card">
+          <div className="why-us-icon">✨</div>
+          <h3>100% Customizable</h3>
+          <p>Want to change the itinerary? We tailor your trip exactly to your preferences.</p>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ─────────────── NEWSLETTER POPUP ─────────────── */
+function NewsletterPopup() {
+  const [isOpen, setIsOpen] = useState(false);
+  const [email, setEmail] = useState("");
+  const [submitted, setSubmitted] = useState(false);
+
+  useEffect(() => {
+    // Show popup after 5 seconds if not already shown in this session (using sessionStorage for demo)
+    const hasSeenPopup = sessionStorage.getItem("hasSeenNewsletter");
+    if (!hasSeenPopup) {
+      const timer = setTimeout(() => {
+        setIsOpen(true);
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, []);
+
+  const closePopup = () => {
+    setIsOpen(false);
+    sessionStorage.setItem("hasSeenNewsletter", "true");
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (email) {
+      setSubmitted(true);
+      setTimeout(() => {
+        closePopup();
+      }, 3000);
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="newsletter-overlay">
+      <div className="newsletter-modal">
+        <button className="btn-close-modal" onClick={closePopup}>✕</button>
+        {submitted ? (
+          <div className="newsletter-success">
+            <h3>Awesome! 🎉</h3>
+            <p>Your free 2026 Himachal Trek Calendar is on its way to your inbox.</p>
+          </div>
+        ) : (
+          <div className="newsletter-content">
+            <span className="newsletter-badge">FREE GUIDE</span>
+            <h2>Get our Free Himachal Trek Calendar 2026</h2>
+            <p>Plan your year of adventure. Discover the best times to visit every valley and peak.</p>
+            <form onSubmit={handleSubmit} className="newsletter-form">
+              <input 
+                type="email" 
+                placeholder="Enter your email" 
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+              <button type="submit" className="btn-subscribe">SEND IT TO ME</button>
+            </form>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
 
 /* ═══════════════════════════════════════════
    MAIN PAGE
@@ -194,10 +340,12 @@ export default function Home() {
   const [carouselIndex, setCarouselIndex] = useState(0);
   const maxIndex = tours.length - 3;
   const [searchQuery, setSearchQuery] = useState("");
+  const [searchDate, setSearchDate] = useState("");
 
   const handleSearch = () => {
     const params = new URLSearchParams();
     if (searchQuery.trim()) params.set("q", searchQuery.trim());
+    if (searchDate) params.set("date", searchDate);
     router.push(`/tours${params.toString() ? "?" + params.toString() : ""}`);
   };
 
@@ -266,6 +414,7 @@ export default function Home() {
 
   return (
     <>
+      <NewsletterPopup />
       {/* ──── HEADER ──── */}
       <header className="header" id="header">
         <div className="header-inner">
@@ -332,9 +481,16 @@ export default function Home() {
             onChange={(e) => setSearchQuery(e.target.value)}
           />
           <span className="search-divider" />
-          <span className="search-date">
-            <CalendarIcon /> &nbsp;Select dates
-          </span>
+          <div className="search-date" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <CalendarIcon />
+            <input 
+              type="date" 
+              className="search-date-input"
+              value={searchDate}
+              onChange={(e) => setSearchDate(e.target.value)}
+              aria-label="Select date"
+            />
+          </div>
           <button type="submit" className="search-btn">SEARCH TOURS</button>
         </form>
       </div>
@@ -379,6 +535,11 @@ export default function Home() {
                       <span className="badge" key={i}>{ico}</span>
                     ))}
                   </div>
+                  <div className="tours-page-card-difficulty">
+                    <span className={`difficulty-tag ${tour.difficulty.toLowerCase()}`}>
+                      {tour.difficulty}
+                    </span>
+                  </div>
                 </div>
                 <div className="tour-card-body">
                   <div className="tour-card-tags">
@@ -396,6 +557,12 @@ export default function Home() {
                       <UserIcon /> {tour.persons} Person
                     </span>
                   </div>
+                  {(tour.spotsLeft || tour.urgencyMsg) && (
+                    <div className="tour-urgency">
+                      {tour.spotsLeft && <span className="urgency-spots">⏳ Only {tour.spotsLeft} {tour.spotsLeft === 1 ? 'spot' : 'spots'} left</span>}
+                      {tour.urgencyMsg && <span className="urgency-msg">🔥 {tour.urgencyMsg}</span>}
+                    </div>
+                  )}
                   <div className="tour-card-footer">
                     <div className="price-group">
                       {tour.priceOld ? (
@@ -425,6 +592,9 @@ export default function Home() {
         </div>
       </section>
 
+      {/* ──── WHY US ──── */}
+      <WhyUsSection />
+
       {/* ──── STATS ──── */}
       <section
         className="stats-section container"
@@ -442,83 +612,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ──── DESTINATION SPOTLIGHT ──── */}
-      <section
-        className="destination-section"
-        id="destinations"
-        ref={destRef.ref}
-        style={{ opacity: destRef.isVisible ? 1 : 0, transition: 'opacity 0.9s ease 0.2s' }}
-      >
-        {/* Full-bleed background image */}
-        <div className="destination-bg">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/images/destination-himachal.svg"
-            alt="Trekkers at a Himalayan viewpoint"
-          />
-        </div>
-        <div className="destination-overlay" />
-
-        {/* Content grid over the image */}
-        <div className="destination-inner">
-          {/* Left: text content */}
-          <div className="destination-info">
-            <div className="destination-eyebrow">GET TO KNOW</div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
-              <MountainSvg className="mountain-icon" />
-            </div>
-            <h2>The Himachal Circuit</h2>
-            <p className="destination-desc">
-              Snow-dusted peaks, pine valleys and riverside villages strung along one
-              unforgettable road trip — this is Himachal at its most untouched.
-            </p>
-            <div className="destination-links">
-              <a href="#" className="dest-link">attractions <ArrowRight /></a>
-              <a href="#" className="dest-link">similar destinations <ArrowRight /></a>
-            </div>
-            <button className="btn-choose-tour">CHOOSE A TOUR</button>
-          </div>
-
-          {/* Right: route map overlay */}
-          <div className="destination-map-area">
-            <div className="route-points">
-              {/* Dotted route line SVG */}
-              <svg
-                className="route-line"
-                width="100%"
-                height="100%"
-                viewBox="0 0 500 400"
-                preserveAspectRatio="xMidYMid meet"
-                style={{ position: 'absolute', inset: 0 }}
-              >
-                <path
-                  d="M 100,60 C 150,100 220,80 300,140 C 360,180 280,240 300,300 C 310,340 380,320 420,350"
-                  fill="none"
-                  stroke="rgba(245,241,232,0.45)"
-                  strokeWidth="1.8"
-                  strokeDasharray="6,5"
-                />
-              </svg>
-              <div className="route-point" style={{ left: '18%', top: '12%' }}>
-                <span className="route-dot" />
-                <span className="route-label">Manali</span>
-              </div>
-              <div className="route-point" style={{ left: '56%', top: '28%' }}>
-                <span className="route-dot" />
-                <span className="route-label">Sissu</span>
-              </div>
-              <div className="route-point" style={{ left: '50%', top: '58%' }}>
-                <span className="route-dot" />
-                <span className="route-label">Kasol</span>
-              </div>
-              <div className="route-point" style={{ right: '8%', bottom: '8%' }}>
-                <span className="route-dot" />
-                <span className="route-label">Jibhi</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* ──── FAQ ──── */}
+      <FaqAccordion />
 
       {/* ──── CONTACT SECTION ──── */}
       <section
@@ -706,6 +801,84 @@ export default function Home() {
                     <WhatsAppIcon />
                   </a>
                 </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ──── DESTINATION SPOTLIGHT ──── */}
+      <section
+        className="destination-section"
+        id="destinations"
+        ref={destRef.ref}
+        style={{ opacity: destRef.isVisible ? 1 : 0, transition: 'opacity 0.9s ease 0.2s' }}
+      >
+        {/* Full-bleed background image */}
+        <div className="destination-bg">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/images/destination-himachal.svg"
+            alt="Trekkers at a Himalayan viewpoint"
+          />
+        </div>
+        <div className="destination-overlay" />
+
+        {/* Content grid over the image */}
+        <div className="destination-inner">
+          {/* Left: text content */}
+          <div className="destination-info">
+            <div className="destination-eyebrow">GET TO KNOW</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
+              <MountainSvg className="mountain-icon" />
+            </div>
+            <h2>The Himachal Circuit</h2>
+            <p className="destination-desc">
+              Snow-dusted peaks, pine valleys and riverside villages strung along one
+              unforgettable road trip — this is Himachal at its most untouched.
+            </p>
+            <div className="destination-links">
+              <a href="#" className="dest-link">attractions <ArrowRight /></a>
+              <a href="#" className="dest-link">similar destinations <ArrowRight /></a>
+            </div>
+            <button className="btn-choose-tour">CHOOSE A TOUR</button>
+          </div>
+
+          {/* Right: route map overlay */}
+          <div className="destination-map-area">
+            <div className="route-points">
+              {/* Dotted route line SVG */}
+              <svg
+                className="route-line"
+                width="100%"
+                height="100%"
+                viewBox="0 0 500 400"
+                preserveAspectRatio="xMidYMid meet"
+                style={{ position: 'absolute', inset: 0 }}
+              >
+                <path
+                  d="M 100,60 C 150,100 220,80 300,140 C 360,180 280,240 300,300 C 310,340 380,320 420,350"
+                  fill="none"
+                  stroke="rgba(245,241,232,0.45)"
+                  strokeWidth="1.8"
+                  strokeDasharray="6,5"
+                />
+              </svg>
+              <div className="route-point" style={{ left: '18%', top: '12%' }}>
+                <span className="route-dot" />
+                <span className="route-label">Manali</span>
+              </div>
+              <div className="route-point" style={{ left: '56%', top: '28%' }}>
+                <span className="route-dot" />
+                <span className="route-label">Sissu</span>
+              </div>
+              <div className="route-point" style={{ left: '50%', top: '58%' }}>
+                <span className="route-dot" />
+                <span className="route-label">Kasol</span>
+              </div>
+              <div className="route-point" style={{ right: '8%', bottom: '8%' }}>
+                <span className="route-dot" />
+                <span className="route-label">Jibhi</span>
               </div>
             </div>
           </div>

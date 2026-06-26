@@ -111,6 +111,8 @@ function ToursPageContent() {
   const [sortBy, setSortBy] = useState<SortKey>("default");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [showMobileFilters, setShowMobileFilters] = useState(false);
+  const [compareList, setCompareList] = useState<Tour[]>([]);
+  const [showCompareModal, setShowCompareModal] = useState(false);
 
   // Sync search query with URL
   useEffect(() => {
@@ -142,6 +144,18 @@ function ToursPageContent() {
     setDurationRange([1, 10]);
     setSearchQuery("");
     setSortBy("default");
+  };
+
+  const handleCompareToggle = (tour: Tour) => {
+    setCompareList((prev) => {
+      const exists = prev.find((t) => t.id === tour.id);
+      if (exists) return prev.filter((t) => t.id !== tour.id);
+      if (prev.length >= 2) {
+        // Replace the oldest selection if trying to select a 3rd
+        return [prev[1], tour];
+      }
+      return [...prev, tour];
+    });
   };
 
   /* ─── Filter + Sort logic ─── */
@@ -448,12 +462,72 @@ function ToursPageContent() {
           ) : (
             <div className={`tours-grid ${viewMode}`}>
               {filteredTours.map((tour) => (
-                <TourCard key={tour.id} tour={tour} viewMode={viewMode} />
+                <TourCard 
+                  key={tour.id} 
+                  tour={tour} 
+                  viewMode={viewMode} 
+                  onCompareToggle={handleCompareToggle}
+                  compareList={compareList}
+                />
               ))}
             </div>
           )}
         </section>
       </main>
+
+      {/* ──── COMPARISON WIDGETS ──── */}
+      {compareList.length > 0 && (
+        <div className="comparison-bar">
+          <div className="container comparison-bar-inner">
+            <div className="compare-info">
+              <span className="compare-count">{compareList.length} tour{compareList.length > 1 ? 's' : ''} selected</span>
+              {compareList.length === 1 && <span className="compare-hint">Select 1 more to compare</span>}
+            </div>
+            <div className="compare-actions">
+              <button className="btn-clear-compare" onClick={() => setCompareList([])}>Clear</button>
+              <button 
+                className="btn-compare-now" 
+                disabled={compareList.length < 2} 
+                onClick={() => setShowCompareModal(true)}
+              >
+                Compare Tours
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showCompareModal && compareList.length === 2 && (
+        <div className="comparison-overlay">
+          <div className="comparison-modal">
+            <button className="btn-close-modal" onClick={() => setShowCompareModal(false)}>✕</button>
+            <h2 className="comparison-title">Compare Tours</h2>
+            <div className="comparison-grid">
+              <div className="compare-col feature-labels">
+                <div className="compare-cell compare-header"></div>
+                <div className="compare-cell">Duration</div>
+                <div className="compare-cell">Difficulty</div>
+                <div className="compare-cell">Price</div>
+                <div className="compare-cell">Highlights</div>
+              </div>
+              {compareList.map((t) => (
+                <div className="compare-col" key={t.id}>
+                  <div className="compare-cell compare-header">
+                    <Image src={t.image} alt={t.title} width={150} height={100} style={{ objectFit: "cover", borderRadius: "8px" }} />
+                    <h3 className="compare-tour-title">{t.title}</h3>
+                  </div>
+                  <div className="compare-cell"><strong>{t.days}</strong> Days</div>
+                  <div className="compare-cell"><span className={`difficulty-tag ${t.difficulty.toLowerCase()}`}>{t.difficulty}</span></div>
+                  <div className="compare-cell price-cell">{formatPrice(t.priceNew)}</div>
+                  <div className="compare-cell highlights-cell">
+                    {t.tags.map(tag => <span className="tag" key={tag}>{tag}</span>)}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ──── FOOTER ──── */}
       <footer className="footer">
@@ -470,7 +544,9 @@ function ToursPageContent() {
 }
 
 /* ─────────── TOUR CARD ─────────── */
-function TourCard({ tour, viewMode }: { tour: Tour; viewMode: string }) {
+function TourCard({ tour, viewMode, onCompareToggle, compareList }: { tour: Tour; viewMode: string; onCompareToggle: (tour: Tour) => void; compareList: Tour[] }) {
+  const isCompared = compareList.some((t) => t.id === tour.id);
+
   return (
     <article className={`tours-page-card ${viewMode}`} id={`tour-${tour.slug}`}>
       <div className="tours-page-card-image">
@@ -514,6 +590,12 @@ function TourCard({ tour, viewMode }: { tour: Tour; viewMode: string }) {
             📍 {tour.destination}
           </span>
         </div>
+        {(tour.spotsLeft || tour.urgencyMsg) && (
+          <div className="tour-urgency">
+            {tour.spotsLeft && <span className="urgency-spots">⏳ Only {tour.spotsLeft} {tour.spotsLeft === 1 ? 'spot' : 'spots'} left</span>}
+            {tour.urgencyMsg && <span className="urgency-msg">🔥 {tour.urgencyMsg}</span>}
+          </div>
+        )}
         <div className="tours-page-card-footer">
           <div className="price-group">
             {tour.priceOld ? (
@@ -525,7 +607,17 @@ function TourCard({ tour, viewMode }: { tour: Tour; viewMode: string }) {
               <span className="price-only">{formatPrice(tour.priceNew)}</span>
             )}
           </div>
-          <a href={`/#contact`} className="btn-card-book">BOOK NOW</a>
+          <div className="card-actions" style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            <label className="compare-checkbox-label" style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.75rem", cursor: "pointer" }}>
+              <input 
+                type="checkbox" 
+                checked={isCompared} 
+                onChange={() => onCompareToggle(tour)}
+              />
+              Compare
+            </label>
+            <a href={`/#contact`} className="btn-card-book">BOOK NOW</a>
+          </div>
         </div>
       </div>
     </article>

@@ -12,6 +12,8 @@ export interface Tour {
   icons: string[];
   destination: string;
   difficulty: string;
+  urgencyMsg?: string;
+  spotsLeft?: number;
 }
 
 export const tours: Tour[] = [
@@ -29,6 +31,8 @@ export const tours: Tour[] = [
     icons: ["🏔️", "🛶"],
     destination: "Manali",
     difficulty: "Moderate",
+    urgencyMsg: "High demand",
+    spotsLeft: 2,
   },
   {
     id: 2,
@@ -59,6 +63,8 @@ export const tours: Tour[] = [
     icons: ["🌲", "☕"],
     destination: "Kasol",
     difficulty: "Moderate",
+    urgencyMsg: "Sale ends soon!",
+    spotsLeft: 4,
   },
   {
     id: 4,
@@ -89,6 +95,8 @@ export const tours: Tour[] = [
     icons: ["🧘", "🌊"],
     destination: "Rishikesh",
     difficulty: "Easy",
+    urgencyMsg: "Selling fast",
+    spotsLeft: 1,
   },
   {
     id: 6,
@@ -104,6 +112,7 @@ export const tours: Tour[] = [
     icons: ["🏡", "🐟"],
     destination: "Jibhi",
     difficulty: "Easy",
+    spotsLeft: 6,
   },
 ];
 
